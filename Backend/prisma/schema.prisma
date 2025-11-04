@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Configura o GERADOR de código do Prisma Client
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Configura a CONEXÃO com o seu banco de dados
+datasource db {
+  provider = "sqlite" // 
+  url      = env("DATABASE_URL")
+}
+
+
+// --------------------------------------------------
+// SEUS MODELOS DE DADOS
+// --------------------------------------------------
+
+// Modelo para os Usuários
+model Usuario {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  senhaHash String
+  vbucks    Int      @default(10000)
+  createdAt DateTime @default(now())
+
+  // Relacionamentos (o que este usuário possui)
+  itensComprados ItemComprado[]
+  historico      HistoricoTransacao[]
+}
+
+// Modelo para os Cosméticos (que vêm da API do Fortnite)
+model Cosmetico {
+  id        String   @id @default(uuid())
+  apiId     String   @unique // O ID que vem da API do Fortnite
+  nome      String
+  tipo      String? // O '?' significa que o campo é opcional
+  raridade  String?
+  imagemUrl String?
+  preco     Int? // Preço em v-bucks
+
+  // Campos para os filtros e ícones
+  isNew     Boolean  @default(false)
+  isForSale Boolean  @default(false)
+  isPromo   Boolean  @default(false)
+  addedAt   DateTime // Data de inclusão (para o filtro de data)
+
+  // Relacionamentos
+  compradoPor ItemComprado[]
+}
+
+// Modelo para ligar Usuários e Cosméticos (Tabela-Pivô)
+// Isso representa os "cosméticos adquiridos"
+model ItemComprado {
+  id          String   @id @default(uuid())
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId   String
+  cosmetico   Cosmetico @relation(fields: [cosmeticoId], references: [id])
+  cosmeticoId String
+  dataCompra  DateTime @default(now())
+
+  // Garante que o usuário só compre 1 vez
+  @@unique([usuarioId, cosmeticoId])
+}
+
+// Modelo para o Histórico de compras/devoluções
+model HistoricoTransacao {
+  id          String   @id @default(uuid())
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId   String
+  tipo        String // "COMPRA" ou "DEVOLUCAO"
+  valorVbucks Int // Valor da transação
+  data        DateTime @default(now())
+}

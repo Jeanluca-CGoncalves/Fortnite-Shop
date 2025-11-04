@@ -1,0 +1,18 @@
+# Node.js
+node_modules/
+.env
+package-lock.json
+
+# Logs
+*.log
+
+# Build
+dist/
+build/
+
+# Banco de dados local (SQLite)
+*.sqlite
+
+# Sistema
+.DS_Store
+Thumbs.db
