@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Logout - Fortnite Shop</title>
+</head>
+<body>
+  <h2>Deseja realmente sair?</h2>
+  <button id="btnLogout">Sair</button>
+
+  <script>
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+      const res = await fetch('http://localhost:3000/api/usuarios/deslogar', {
+        method: 'POST',
+        credentials: 'include' // envia o cookie para ser apagado
+      });
+
+      const data = await res.json();
+      alert(data.mensagem || data.erro);
+
+      // redireciona para a tela de login
+      window.location.href = '/login.html';
+    });
+  </script>
+</body>
+</html>

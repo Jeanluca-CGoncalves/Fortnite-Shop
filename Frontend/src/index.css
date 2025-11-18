@@ -1,0 +1,16 @@
+/* src/index.css */
+
+body {
+  /* 1. Remove qualquer margem ou padding */
+  margin: 0;
+  padding: 0;
+  
+  /* 2. Define o fundo escuro como padrão para TUDO */
+  background-color: #1a1d2e; 
+  
+  /* 3. Garante que a fonte padrão seja legível no escuro */
+  color: #f0f0f0;
+  
+  /* Remove qualquer imagem de fundo que possa estar aqui */
+  background-image: none; 
+}

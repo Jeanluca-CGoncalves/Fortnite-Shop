@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+
+# Compiled output
+dist/
+build/
+.vite/
+.next/
+.out/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.development
+.env.production
+
+# Prisma
+*.db-journal
+*.sqlite
+*.db-shm
+*.db-wal
+
+# VSCode settings
+.vscode/
+
+# Logs
+npm-debug.log
+yarn-error.log
+pnpm-debug.log

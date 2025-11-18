@@ -1,0 +1,26 @@
+/* src/App.css (Corrigido) */
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: Helvetica;
+    box-sizing: border-box;
+
+    /* Recomendo remover ou mover isso para 'body' no index.css */
+    /* Aplicar em TUDO (*) pode quebrar estilos de outros componentes */
+    /* text-shadow: #000 1px 1px; */
+    /* color: white; */
+}
+
+.App {
+    /* As 3 linhas de flex foram removidas */
+
+    /* Garante que o container do app ocupe a tela inteira */
+    width: 100%;
+    min-height: 100vh;
+
+    /* Essas linhas são do seu fundo dos Simpsons. */
+    /* Como você as limpou no 'index.css', elas não são mais necessárias aqui */
+    /* background-size: cover; */
+    /* background-position: center; */
+}

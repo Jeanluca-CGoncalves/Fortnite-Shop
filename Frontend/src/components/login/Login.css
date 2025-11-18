@@ -1,0 +1,131 @@
+/* Define o container para ocupar a tela toda e centralizar */
+.Container {
+    width: 100%;
+    min-height: 100vh;
+    
+    /* Centralização Flexbox */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    /* IMAGEM DE FUNDO (Ajuste o nome do arquivo se precisar) */
+    background-image: url('../../assets/thumb-1920-1402624.jpg'); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    /* Garante que fique na frente do fundo azul global */
+    position: relative;
+    z-index: 1;
+}
+
+/* Estilo do Cartão de Login (O quadrado azul) */
+.Container form {
+    width: 420px;
+    background-color: rgb(18, 118, 233); /* O Azul do seu tema */
+    padding: 40px;
+    border-radius: 20px;
+    
+    /* Efeitos de vidro/sombra */
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.Container h1 {
+    font-size: 2rem;
+    color: white;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* Inputs */
+.input-field {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.input-field input {
+    width: 100%;
+    padding: 15px 20px 15px 45px; /* Espaço para o ícone */
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 40px;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+}
+
+.input-field input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.input-field .icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 1.2rem;
+}
+
+/* Checkbox e Esqueceu Senha */
+.recall-forget {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.recall-forget a {
+    color: white;
+    text-decoration: none;
+}
+
+.recall-forget a:hover {
+    text-decoration: underline;
+}
+
+/* Botão Entrar (Amarelo) */
+.Container button {
+    width: 100%;
+    height: 50px;
+    border: none;
+    border-radius: 40px;
+    background-color: rgb(255, 196, 0); /* Amarelo */
+    color: #000;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+}
+
+.Container button:hover {
+    transform: scale(1.03);
+}
+
+/* Link criar conta */
+.signup-link {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: white;
+}
+
+.signup-link a {
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    margin-left: 5px;
+}
+
+.signup-link a:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Área Privada - Fortnite Shop</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #00ccff;
+    }
+
+    button {
+      background-color: #00ccff;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin: 10px;
+    }
+
+    button:hover {
+      background-color: #0099cc;
+    }
+
+    .item {
+      background-color: #1f1f1f;
+      border-radius: 10px;
+      display: inline-block;
+      padding: 10px;
+      margin: 10px;
+      width: 200px;
+    }
+
+    img {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    #itens {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    #resposta {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎮 Área Privada</h2>
+
+  <button id="acessar">Ver conteúdo protegido</button>
+  <button id="listar">Listar meus itens</button>
+
+  <div id="resposta"></div>
+  <div id="itens"></div>
+
+  <script>
+    // Verifica acesso protegido
+    document.getElementById('acessar').addEventListener('click', async () => {
+      const resposta = await fetch('http://localhost:3000/api/usuarios/privado', {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      const data = await resposta.text();
+      document.getElementById('resposta').innerText = data;
+    });
+
+    // Lista os itens do usuário
+    document.getElementById('listar').addEventListener('click', async () => {
+      const resp = await fetch('http://localhost:3000/api/usuarios/itens', {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      const data = await resp.json();
+      const container = document.getElementById('itens');
+      container.innerHTML = '';
+
+      if (data.erro) {
+        container.innerHTML = `<p>${data.erro}</p>`;
+        return;
+      }
+
+      if (data.length === 0) {
+        container.innerHTML = `<p>Você ainda não possui itens.</p>`;
+        return;
+      }
+
+      data.forEach(item => {
+        const div = document.createElement('div');
+        div.classList.add('item');
+        div.innerHTML = `
+          <img src="${item.cosmetico.imagemUrl || ''}" alt="${item.cosmetico.nome}">
+          <p><strong>${item.cosmetico.nome}</strong></p>
+          <p>${item.cosmetico.raridade}</p>
+          <button onclick="devolver('${item.cosmetico.id}')">Devolver</button>
+        `;
+        container.appendChild(div);
+      });
+    });
+
+    // Devolve um item
+    async function devolver(cosmeticoId) {
+      if (!confirm('Tem certeza que deseja devolver este item?')) return;
+
+      const resp = await fetch('http://localhost:3000/api/loja/devolver', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ cosmeticoId })
+      });
+
+      const data = await resp.json();
+      alert(data.mensagem || data.erro);
+    }
+  </script>
+</body>
+</html>
