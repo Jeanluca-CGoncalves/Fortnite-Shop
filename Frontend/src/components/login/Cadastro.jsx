@@ -1,52 +1,66 @@
-import {FaUser, FaLock} from "react-icons/fa";
-
-import {useState} from "react";
-import { Link } from "react-router-dom";
-
+import { FaUser, FaLock } from "react-icons/fa";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../../services/api";
 import "./Login.css";
 
 const Cadastro = () => {
+  const navigate = useNavigate();
 
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
 
-    const handleSubmit = event =>{
-        event.preventDefault();
-        
-        alert("Enviando os dados: " +username + " - " + password)
-    };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    try {
+      const response = await api.post("/registrar", {
+        email,
+        senha,
+      });
+
+      alert("Conta criada com sucesso!");
+      navigate("/");
+    } catch (error) {
+      alert("Erro ao criar conta: " + error.response?.data?.erro);
+    }
+  };
 
   return (
-    <div className='Container'>
-        <form onSubmit={handleSubmit}>
-            <h1>Criar cadastro</h1>
-            <div className="input-field">
-                <input type="email"
-                 placeholder='E-mail' 
-                 required
-                onChange={(e) => setUsername(e.target.value)}>
+    <div className="Container">
+      <form onSubmit={handleSubmit}>
+        <h1>Criar cadastro</h1>
 
-                </input>
-                <FaUser className='icon' />
-            </div>
-            <div className="input-field">
-                <input type="password" placeholder='Senha'
-                onChange={(e) => setPassword(e.target.value)}
-                ></input>
-                <FaLock className='icon' />
-            </div>
-            <button>Criar conta</button>
+        <div className="input-field">
+          <input
+            type="email"
+            placeholder="E-mail"
+            required
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <FaUser className="icon" />
+        </div>
 
-            <div className="signup-link">
-                <p>Já possuo uma conta <Link to="/" >Entrar </Link> </p>
-            </div>
+        <div className="input-field">
+          <input
+            type="password"
+            placeholder="Senha"
+            required
+            onChange={(e) => setSenha(e.target.value)}
+          />
+          <FaLock className="icon" />
+        </div>
 
+        <button>Criar conta</button>
 
-            
-        </form>
-      
+        <div className="signup-link">
+          <p>
+            Já possuo uma conta <Link to="/">Entrar </Link>
+          </p>
+        </div>
+      </form>
     </div>
-  )
-}
+  );
+};
 
-export default Cadastro
+export default Cadastro;

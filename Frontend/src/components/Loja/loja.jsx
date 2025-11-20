@@ -1,159 +1,457 @@
+// Frontend/src/components/Loja/loja.jsx
+
 import React, { useEffect, useState } from 'react';
 import './Loja.css';
 import { FaShoppingCart, FaSearch, FaFilter, FaChevronDown } from 'react-icons/fa';
-import Vbucks from '../../assets/vbucks.png'; 
+import Vbucks from '../../assets/vbucks.png';
+import api from "../../services/api";
 
-const Loja = () => {
-  const [items, setItems] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  // NOVOS ESTADOS PARA O FILTRO MÚLTIPLO
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedRarities, setSelectedRarities] = useState([]);
+// 1. O componente agora recebe 'saldo' e 'setSaldo' como props
+const Loja = ({ saldo, setSaldo }) => { 
+  const [items, setItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  // REMOVIDO: const [saldo, setSaldo] = useState(0); 
+  const [usuarioLogado, setUsuarioLogado] = useState(null);
 
-  const raritiesOptions = [
-    { value: 'legendary', label: 'Lendário', color: '#d37e28' },
-    { value: 'epic', label: 'Épico', color: '#8a2be2' },
-    { value: 'rare', label: 'Raro', color: '#00d8ff' },
-    { value: 'uncommon', label: 'Incomum', color: '#66cc33' },
-    { value: 'icon_series', label: 'Série Ícones', color: '#00cfba' },
-    { value: 'marvel', label: 'Marvel', color: '#ed1d24' }
-  ];
+  // Filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedRarities, setSelectedRarities] = useState([]);
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
+  const [apenasNovos, setApenasNovos] = useState(false);
+  const [apenasVenda, setApenasVenda] = useState(false);
+  const [apenasPromo, setApenasPromo] = useState(false);
 
-  useEffect(() => {
-    const fetchShop = async () => {
-      try {
-        const response = await fetch('https://fortnite-api.com/v2/shop/br');
-        const data = await response.json();
-        
-        let allEntries = [];
-        if (data.data?.featured?.entries) allEntries = [...allEntries, ...data.data.featured.entries];
-        if (data.data?.daily?.entries) allEntries = [...allEntries, ...data.data.daily.entries];
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
 
-        setItems(allEntries);
-        setFilteredItems(allEntries);
-        setLoading(false);
-      } catch (error) {
-        console.error("Erro ao buscar loja:", error);
-        setLoading(false);
+  const [tiposDisponiveis, setTiposDisponiveis] = useState([]);
+
+  const raritiesOptions = [
+    { value: 'Legendary', label: 'Lendário', color: '#d37e28' },
+    { value: 'Epic', label: 'Épico', color: '#8a2be2' },
+    { value: 'Rare', label: 'Raro', color: '#00d8ff' },
+    { value: 'Uncommon', label: 'Incomum', color: '#66cc33' },
+    { value: 'Icon Series', label: 'Série Ícones', color: '#00cfba' },
+    { value: 'Marvel Series', label: 'Marvel', color: '#ed1d24' }
+  ];
+
+    // 2. REMOVIDO: O useEffect que buscava o saldo. Essa lógica foi para o App.jsx
+
+  // ✅ BUSCAR TIPOS DISPONÍVEIS (Sem mudanças)
+  useEffect(() => {
+    const fetchTipos = async () => {
+      try {
+        const response = await api.get('/api/tipos');
+        console.log('📦 Tipos encontrados:', response.data.tipos);
+        setTiposDisponiveis(response.data.tipos || []);
+      } catch (err) {
+        console.error('❌ Erro ao buscar tipos:', err);
+      }
+    };
+    fetchTipos();
+  }, []);
+
+  // ✅ BUSCAR TODOS OS COSMÉTICOS (Sem mudanças)
+  useEffect(() => {
+    const fetchShop = async () => {
+      setLoading(true);
+      try {
+        console.log('🔄 Buscando TODOS os cosméticos...');
+        
+        // REMOVER O LIMIT OU COLOCAR UM NÚMERO MUITO ALTO
+        const response = await api.get('/api/cosmeticos?limit=50000');
+        const cosmeticos = response.data.data;
+
+        console.log(`✅ ${cosmeticos.length} itens carregados da API!`);
+        
+        setItems(cosmeticos);
+        setFilteredItems(cosmeticos);
+        setLoading(false);
+      } catch (error) {
+        console.error("❌ Erro ao buscar loja:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchShop();
+  }, []);
+
+  // ✅ APLICAR FILTROS (Sem mudanças)
+  useEffect(() => {
+    let filtered = [...items];
+
+    // Busca por nome
+    if (searchTerm) {
+      filtered = filtered.filter(item =>
+        item.nome.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filtro de raridade
+    if (selectedRarities.length > 0) {
+      filtered = filtered.filter(item =>
+        selectedRarities.includes(item.raridade)
+      );
+    }
+
+    // Filtro de tipo
+    if (selectedTypes.length > 0) {
+      filtered = filtered.filter(item =>
+        selectedTypes.includes(item.tipo)
+      );
+    }
+
+    // Filtro de data
+    if (dataInicio) {
+      filtered = filtered.filter(item =>
+        new Date(item.addedAt) >= new Date(dataInicio)
+      );
+    }
+    if (dataFim) {
+      filtered = filtered.filter(item =>
+        new Date(item.addedAt) <= new Date(dataFim)
+      );
+    }
+
+    // Filtros booleanos
+    if (apenasNovos) {
+      filtered = filtered.filter(item => item.isNew === true);
+    }
+    if (apenasVenda) {
+      filtered = filtered.filter(item => item.isForSale === true);
+    }
+    if (apenasPromo) {
+      filtered = filtered.filter(item => item.isPromo === true);
+    }
+
+    console.log(`🔍 Filtros aplicados: ${filtered.length} itens encontrados`);
+    setFilteredItems(filtered);
+    setCurrentPage(1); // Resetar para página 1 quando filtrar
+  }, [searchTerm, selectedRarities, selectedTypes, dataInicio, dataFim, apenasNovos, apenasVenda, apenasPromo, items]);
+
+  // ✅ PAGINAÇÃO (Sem mudanças)
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = filteredItems.slice(startIndex, endIndex);
+
+  const toggleRarity = (value) => {
+    if (selectedRarities.includes(value)) {
+      setSelectedRarities(selectedRarities.filter(item => item !== value));
+    } else {
+      setSelectedRarities([...selectedRarities, value]);
+    }
+  };
+
+  const toggleType = (value) => {
+    if (selectedTypes.includes(value)) {
+      setSelectedTypes(selectedTypes.filter(item => item !== value));
+    } else {
+      setSelectedTypes([...selectedTypes, value]);
+    }
+  };
+
+  const limparFiltros = () => {
+    setSearchTerm('');
+    setSelectedRarities([]);
+    setSelectedTypes([]);
+    setDataInicio('');
+    setDataFim('');
+    setApenasNovos(false);
+    setApenasVenda(false);
+    setApenasPromo(false);
+  };
+
+  // ✅ LÓGICA DE COMPRA (Usa setSaldo recebido via prop)
+  const handleBuy = async (cosmeticoId, preco, nome) => {
+    if (!preco || preco === 0) {
+      alert("❌ Este item não possui preço definido!");
+      return;
+    }
+
+    if (preco > saldo) {
+      alert(`❌ Saldo insuficiente!\n\nVocê tem: ${saldo.toLocaleString()} V-Bucks\nPrecisa de: ${preco.toLocaleString()} V-Bucks`);
+      return;
+    }
+
+    if (!window.confirm(`Confirmar compra de "${nome}" por ${preco.toLocaleString()} V-Bucks?`)) {
+      return;
+    }
+
+    try {
+      const response = await api.post("/store/comprar", { cosmeticoId });
+      alert("✅ " + response.data.mensagem);
+      
+      // ATUALIZA O SALDO GLOBALMENTE VIA PROP
+      if(setSaldo && response.data.saldoAtual !== undefined) {
+        setSaldo(response.data.saldoAtual); 
+      } else {
+          // Fallback para re-busca (se o App.jsx não conseguir buscar)
+          const userResponse = await api.get('/privado');
+          if (userResponse.data) {
+             setSaldo(userResponse.data.vbucks);
+          }
       }
-    };
-    fetchShop();
-  }, []);
+    } catch (error) {
+      alert("❌ Erro: " + (error.response?.data?.erro || "Erro desconhecido"));
+    }
+  };
 
-  // Lógica de Filtragem Múltipla
-  useEffect(() => {
-    if (selectedRarities.length === 0) {
-        setFilteredItems(items); // Se nada selecionado, mostra tudo
-    } else {
-        const filtered = items.filter(entry => 
-            selectedRarities.includes(entry.items[0]?.rarity?.value)
-        );
-        setFilteredItems(filtered);
-    }
-  }, [selectedRarities, items]);
+  return (
+    <div className="loja-container">
 
-  // Função para marcar/desmarcar checkbox
-  const toggleRarity = (value) => {
-      if (selectedRarities.includes(value)) {
-          setSelectedRarities(selectedRarities.filter(item => item !== value));
-      } else {
-          setSelectedRarities([...selectedRarities, value]);
-      }
-  };
+      <header className="loja-header">
+        <div className="header-content">
+          <h1>LOJA DE ITENS</h1>
+          <p>Atualiza diariamente às 21:00</p>
+          
+          {/* 3. REMOVIDO: Saldo duplicado na seção azul, agora só aparece na Navbar */}
+          {/* O trecho removido era:
+          <p style={{fontSize: '1.2rem', fontWeight: 'bold', marginTop: '10px'}}>
+            💰 Saldo: {saldo.toLocaleString()} V-Bucks
+          </p>
+          */}
+        </div>
 
-  const handleBuy = (itemName, price) => {
-      alert(`Você comprou ${itemName} por ${price} V-Bucks!`);
-  };
+        <div className="header-actions">
+          <div className="search-bar">
+            <FaSearch className="search-icon" />
+            <input 
+              type="text" 
+              placeholder="Buscar..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
-  return (
-    <div className="loja-container">
-      
-      <header className="loja-header">
-        <div className="header-content">
-            <h1>LOJA DE ITENS</h1>
-            <p>Atualiza diariamente às 21:00</p>
-        </div>
-        
-        <div className="header-actions">
-            <div className="search-bar">
-                <FaSearch className="search-icon"/>
-                <input type="text" placeholder="Buscar..." />
-            </div>
+          <div className="filter-wrapper">
+            <button
+              className="filter-btn-toggle"
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+            >
+              <FaFilter />
+              {(selectedRarities.length + selectedTypes.length) > 0 
+                ? `${selectedRarities.length + selectedTypes.length} Filtros` 
+                : 'Filtrar'}
+              <FaChevronDown className={`arrow ${isFilterOpen ? 'open' : ''}`} />
+            </button>
 
-            {/* NOVO COMPONENTE DE FILTRO MÚLTIPLO */}
-            <div className="filter-wrapper">
-                <button 
-                    className="filter-btn-toggle" 
-                    onClick={() => setIsFilterOpen(!isFilterOpen)}
-                >
-                    <FaFilter /> 
-                    {selectedRarities.length > 0 ? `${selectedRarities.length} Filtros` : 'Filtrar'} 
-                    <FaChevronDown className={`arrow ${isFilterOpen ? 'open' : ''}`}/>
-                </button>
+            {isFilterOpen && (
+              <div className="filter-dropdown">
+                <h4 style={{margin: '0 0 10px', fontSize: '0.9rem', opacity: 0.8}}>📊 Raridade</h4>
+                {raritiesOptions.map((option) => (
+                  <label key={option.value} className="filter-option">
+                    <input
+                      type="checkbox"
+                      checked={selectedRarities.includes(option.value)}
+                      onChange={() => toggleRarity(option.value)}
+                    />
+                    <span style={{ color: option.color, fontWeight: 'bold' }}>
+                      {option.label}
+                    </span>
+                  </label>
+                ))}
 
-                {/* Dropdown de Checkboxes */}
-                {isFilterOpen && (
-                    <div className="filter-dropdown">
-                        {raritiesOptions.map((option) => (
-                            <label key={option.value} className="filter-option">
-                                <input 
-                                    type="checkbox" 
-                                    checked={selectedRarities.includes(option.value)}
-                                    onChange={() => toggleRarity(option.value)}
-                                />
-                                <span className="checkmark"></span>
-                                <span style={{color: option.color, fontWeight: 'bold'}}>{option.label}</span>
-                            </label>
-                        ))}
-                         <button className="clear-filter" onClick={() => setSelectedRarities([])}>Limpar Filtros</button>
-                    </div>
-                )}
-            </div>
-        </div>
-      </header>
+                <h4 style={{margin: '20px 0 10px', fontSize: '0.9rem', opacity: 0.8}}>🎒 Tipo de Item</h4>
+                <div style={{maxHeight: '200px', overflowY: 'auto'}}>
+                  {tiposDisponiveis.length === 0 ? (
+                    <p style={{fontSize: '0.85rem', opacity: 0.6, padding: '10px'}}>
+                      Carregando tipos...
+                    </p>
+                  ) : (
+                    tiposDisponiveis.map((tipo) => (
+                      <label key={tipo} className="filter-option">
+                        <input
+                          type="checkbox"
+                          checked={selectedTypes.includes(tipo)}
+                          onChange={() => toggleType(tipo)}
+                        />
+                        <span>{tipo}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
 
-      <div className="loja-grid-section">
-        {loading ? (
-            <div className="loading-container"><div className="spinner"></div></div>
-        ) : (
-            <div className="items-grid">
-                {filteredItems.map((entry, index) => {
-                    const item = entry.items?.[0];
-                    if (!item) return null;
+                <h4 style={{margin: '20px 0 10px', fontSize: '0.9rem', opacity: 0.8}}>📅 Data</h4>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                  <input 
+                    type="date" 
+                    value={dataInicio}
+                    onChange={(e) => setDataInicio(e.target.value)}
+                    style={{
+                      padding: '8px',
+                      background: 'rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      borderRadius: '5px',
+                      color: 'white'
+                    }}
+                  />
+                  <input 
+                    type="date" 
+                    value={dataFim}
+                    onChange={(e) => setDataFim(e.target.value)}
+                    style={{
+                      padding: '8px',
+                      background: 'rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      borderRadius: '5px',
+                      color: 'white'
+                    }}
+                  />
+                </div>
 
-                    const price = entry.finalPrice;
-                    const rarityClass = item.rarity?.value || 'common';
+                <h4 style={{margin: '20px 0 10px', fontSize: '0.9rem', opacity: 0.8}}>🔍 Outros</h4>
+                <label className="filter-option">
+                  <input
+                    type="checkbox"
+                    checked={apenasNovos}
+                    onChange={(e) => setApenasNovos(e.target.checked)}
+                  />
+                  <span>⭐ Apenas Novos</span>
+                </label>
+                <label className="filter-option">
+                  <input
+                    type="checkbox"
+                    checked={apenasVenda}
+                    onChange={(e) => setApenasVenda(e.target.checked)}
+                  />
+                  <span>🛒 Apenas à Venda</span>
+                </label>
+                <label className="filter-option">
+                  <input
+                    type="checkbox"
+                    checked={apenasPromo}
+                    onChange={(e) => setApenasPromo(e.target.checked)}
+                  />
+                  <span>🔥 Apenas Promoções</span>
+                </label>
 
-                    return (
-                        <div className={`shop-card border-${rarityClass}`} key={entry.id || index}>
-                            <div className="card-image-box">
-                                <img src={item.images.icon || item.images.featured} alt={item.name} />
-                                <span className={`rarity-label bg-${rarityClass}`}>
-                                    {item.rarity?.displayValue}
-                                </span>
-                            </div>
+                <button className="clear-filter" onClick={limparFiltros}>
+                  🗑️ Limpar Todos os Filtros
+                </button>
+              </div>
+            )}
+          </div>
 
-                            <div className="card-info">
-                                <h3>{item.name}</h3>
-                                <p className="item-type">{item.type?.displayValue}</p>
-                                <div className="price-row">
-                                    <img src={Vbucks} alt="vbucks" className="price-icon" />
-                                    <span>{price}</span>
-                                </div>
-                                <button className="buy-btn" onClick={() => handleBuy(item.name, price)}>
-                                    <FaShoppingCart /> Comprar
-                                </button>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        )}
-      </div>
-    </div>
-  );
+        </div>
+      </header>
+
+      <div className="loja-grid-section">
+        {loading ? (
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p style={{color: 'white', marginTop: '20px'}}>Carregando todos os itens...</p>
+          </div>
+        ) : (
+          <>
+            <div className="items-grid">
+              {currentItems.length === 0 ? (
+                <p style={{textAlign: 'center', fontSize: '1.5rem', gridColumn: '1/-1'}}>
+                  Nenhum item encontrado com esses filtros.
+                </p>
+              ) : (
+                currentItems.map((item) => (
+                  <div className={`shop-card border-${item.raridade?.toLowerCase()}`} key={item.id}>
+                    <div className="card-image-box">
+                      <img src={item.imagemUrl || 'https://via.placeholder.com/200'} alt={item.nome} />
+                      <span className={`rarity-label bg-${item.raridade?.toLowerCase()}`}>
+                        {item.raridade}
+                      </span>
+                      
+                      <div style={{position: 'absolute', top: '10px', right: '10px', display: 'flex', flexDirection: 'column', gap: '5px'}}>
+                        {item.isNew && (
+                          <span style={{background: '#ffc107', color: '#000', padding: '3px 8px', borderRadius: '5px', fontSize: '0.7rem', fontWeight: 'bold'}}>
+                            ⭐ NOVO
+                          </span>
+                        )}
+                        {item.isForSale && (
+                          <span style={{background: '#4caf50', color: '#fff', padding: '3px 8px', borderRadius: '5px', fontSize: '0.7rem', fontWeight: 'bold'}}>
+                            🛒 VENDA
+                          </span>
+                        )}
+                        {item.isPromo && (
+                          <span style={{background: '#ff5722', color: '#fff', padding: '3px 8px', borderRadius: '5px', fontSize: '0.7rem', fontWeight: 'bold'}}>
+                            🔥 PROMO
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="card-info">
+                      <h3>{item.nome}</h3>
+                      <p className="item-type">{item.tipo}</p>
+
+                      <div className="price-row">
+                        <img src={Vbucks} alt="vbucks" className="price-icon" />
+                        <span>
+                          {item.preco !== null && item.preco !== undefined && item.preco > 0
+                            ? item.preco.toLocaleString() 
+                            : '---'}
+                        </span>
+                      </div>
+
+                      <button 
+                        className="buy-btn" 
+                        onClick={() => handleBuy(item.id, item.preco, item.nome)}
+                        disabled={!item.preco || item.preco === 0 || item.preco > saldo}
+                        style={{
+                          opacity: (!item.preco || item.preco === 0 || item.preco > saldo) ? 0.5 : 1,
+                          cursor: (!item.preco || item.preco === 0 || item.preco > saldo) ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        <FaShoppingCart /> 
+                        {!item.preco || item.preco === 0 ? 'Sem Preço' : 
+                         item.preco > saldo ? 'Saldo Insuficiente' : 'Comprar'}
+                      </button>
+                  </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* PAGINAÇÃO */}
+            {totalPages > 1 && (
+              <div className="pagination-container">
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="pagination-btn"
+                >
+                  ◀ Anterior
+                </button>
+
+                <div className="pagination-info">
+                  Página {currentPage} de {totalPages}
+                  <br />
+                  <span style={{fontSize: '0.9rem', opacity: 0.8}}>
+                    Exibindo {startIndex + 1} a {Math.min(endIndex, filteredItems.length)} de {filteredItems.length.toLocaleString()} itens
+                  </span>
+                </div>
+
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="pagination-btn"
+                >
+                  Próximo ▶
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <div style={{textAlign: 'center', marginTop: '30px', fontSize: '1.3rem', opacity: 0.9, background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '10px'}}>
+        📊 Total de itens: <strong>{filteredItems.length.toLocaleString()}</strong> de <strong>{items.length.toLocaleString()}</strong>
+      </div>
+
+    </div>
+  );
 };
 
 export default Loja;

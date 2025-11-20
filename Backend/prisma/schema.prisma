@@ -8,14 +8,16 @@ datasource db {
 }
 
 model Usuario {
-  id             String               @id @default(uuid())
-  email          String               @unique
-  senhaHash      String
-  vbucks         Int                  @default(10000)
-  createdAt      DateTime             @default(now())
+  id          String   @id @default(uuid())
+  email       String   @unique    // ADICIONE ISTO AQUI
+  senhaHash   String
+  vbucks      Int      @default(10000)
+  createdAt   DateTime @default(now())
   itensComprados ItemComprado[]
-  historico      HistoricoTransacao[] 
+  historico HistoricoTransacao[]
+
 }
+
 
 model Cosmetico {
   id          String               @id @default(uuid())
@@ -45,14 +47,14 @@ model ItemComprado {
 }
 
 model HistoricoTransacao {
-  id          String    @id @default(uuid())
-  usuarioId   String
-  cosmeticoId String?
-  tipo        String      // "COMPRA" ou "DEVOLUCAO"
-  valorVbucks Int
-  data        DateTime @default(now())
+  id           String     @id @default(uuid())
+  usuarioId    String
+  cosmeticoId  String?
+  tipo         String
+  data         DateTime   @default(now())
 
-  usuario     Usuario   @relation(fields: [usuarioId], references: [id])
-  cosmetico   Cosmetico? @relation(fields: [cosmeticoId], references: [id])
+  usuario      Usuario    @relation(fields: [usuarioId], references: [id])
+  cosmetico    Cosmetico? @relation(fields: [cosmeticoId], references: [id])
 }
+
 

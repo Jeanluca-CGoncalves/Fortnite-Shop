@@ -10,14 +10,28 @@ import { fileURLToPath } from 'url';
 
 const prisma = new PrismaClient();
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 
-// --- SUA FUNÇÃO DE SINCRONIZAÇÃO (MANTIDA INTIGRA) ---
+// ------------------------- CORS CONFIG -------------------------
+const FRONTEND = "http://localhost:5173";
+
+app.use(cors({
+  origin: FRONTEND,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Set-Cookie']
+}));
+
+// ------------------------- MIDDLEWARES -------------------------
+app.use(express.json());
+app.use(cookieParser());
+
+// ------------------------- SINCRONIZAÇÃO COM API -------------------------
 async function syncCosmetics() {
   console.log('🔄 Iniciando sincronização com a API do Fortnite...');
-  
+
   try {
-    // Adicionei headers para evitar erro 500/403 da API externa
     const config = { headers: { 'User-Agent': 'FortniteShopApp/1.0' } };
 
     const [allItemsRes, shopRes, newRes] = await Promise.all([
@@ -37,20 +51,16 @@ async function syncCosmetics() {
       const regularPrice = entry.regularPrice ?? finalPrice;
       const isPromo = finalPrice < regularPrice;
 
-      const possibleItemLists = [
-        entry.items,
-        entry.granted,
-        entry.cars,
-        entry.bundle?.items
-      ];
+      const lists = [entry.items, entry.granted, entry.cars, entry.bundle?.items];
 
-      possibleItemLists.forEach(list => {
+      lists.forEach(list => {
         if (Array.isArray(list)) {
           list.forEach(item => {
             if (item?.id) {
-              shopPriceMap.set(item.id, {
-                preco: finalPrice,
-                isPromo
+              shopPriceMap.set(item.id, { 
+                preco: finalPrice, 
+                precoRegular: regularPrice,
+                isPromo 
               });
             }
           });
@@ -59,26 +69,16 @@ async function syncCosmetics() {
     });
 
     const newIdSet = new Set();
-    // Proteção caso a API de novos itens mude a estrutura
-    if (newRes.data.data && newRes.data.data.items) {
-        const newItemsObj = newRes.data.data.items;
-        const allNewItems = Object.values(newItemsObj).flat();
-        allNewItems.forEach(item => {
-          if (item && item.id) newIdSet.add(item.id);
-        });
+    if (newRes.data?.data?.items) {
+      Object.values(newRes.data.data.items).flat().forEach(item => {
+        if (item.id) newIdSet.add(item.id);
+      });
     }
 
-    console.log(`📦 Encontrados ${allItems.length} cosméticos na API.`);
-    
-    // Otimização: Processar em lotes para não travar o banco
-    console.log('💾 Salvando no banco de dados (Isso pode demorar um pouco)...');
-    
+    console.log(`📦 Encontrados ${allItems.length} cosméticos.`);
+
     for (const item of allItems) {
       const info = shopPriceMap.get(item.id);
-      const price = info?.preco || 0;
-      const isPromo = info?.isPromo || false;
-      const isNew = newIdSet.has(item.id);
-      const isForSale = info !== undefined;
 
       await prisma.cosmetico.upsert({
         where: { apiId: item.id },
@@ -88,10 +88,10 @@ async function syncCosmetics() {
           raridade: item.rarity?.value || 'Comum',
           imagemUrl: item.images?.icon || item.images?.smallIcon || null,
           addedAt: item.added ? new Date(item.added) : new Date(),
-          preco: price,
-          isNew,
-          isForSale,
-          isPromo
+          preco: info?.preco ?? 0,
+          isNew: newIdSet.has(item.id),
+          isForSale: info !== undefined,
+          isPromo: info?.isPromo || false
         },
         create: {
           apiId: item.id,
@@ -100,80 +100,286 @@ async function syncCosmetics() {
           raridade: item.rarity?.value || 'Comum',
           imagemUrl: item.images?.icon || item.images?.smallIcon || null,
           addedAt: item.added ? new Date(item.added) : new Date(),
-          preco: price,
-          isNew,
-          isForSale,
-          isPromo
+          preco: info?.preco ?? 0,
+          isNew: newIdSet.has(item.id),
+          isForSale: info !== undefined,
+          isPromo: info?.isPromo || false
         }
       });
     }
 
-    console.log('✅ Sincronização concluída com sucesso!');
-    
-  } catch (error) {
-    console.error('❌ Erro durante a sincronização (O servidor continua rodando):', error.message);
+    console.log('✅ Sincronização concluída!');
+  } catch (err) {
+    console.error('❌ Erro de sincronização:', err.message);
   }
 }
 
-// --- CONFIGURAÇÕES DO SERVIDOR ---
+// Rode a sincronização ao iniciar
+syncCosmetics();
 
-app.use(cors()); // Simplifiquei o CORS para evitar bloqueios no desenvolvimento
-app.use(express.json());
-app.use(cookieParser());
-
-// --- ROTAS CORRIGIDAS (AQUI ESTAVA O PROBLEMA DO 404) ---
-
-// Mudei de '/api/usuarios' para '/' para bater com o Frontend (localhost:3000/login)
-app.use('/', usuariosRoutes); 
-
-// Mudei de '/api/loja' para '/store' para bater com o Frontend (localhost:3000/store/itens)
+// ------------------------- ROTAS DE USUÁRIO -------------------------
+app.use('/', usuariosRoutes);
 app.use('/store', lojaRoutes);
 
-// --- ROTA AVANÇADA DE FILTROS (MANTIDA) ---
-// O frontend pode usar essa rota futuramente para filtros complexos
+// ------------------------- LISTAGEM COMPLETA (SEM LIMITE DE 20) -------------------------
 app.get('/api/cosmeticos', async (req, res) => {
   try {
-    const { 
-      page: pageQuery, nome, raridade, tipo, raridadesArray, tipoArray, 
-      addedAtEquals, DataFinal, DataInicial, novo, aVenda, promocao
-    } = req.query;
+    const page = Number(req.query.page) || 1;
+    const pageSize = Number(req.query.limit) || 500; // AUMENTADO PARA MOSTRAR TODOS
 
-    // ... (Sua lógica de filtro avançado continua aqui) ...
-    // Mantive a estrutura para não deixar o código gigante na resposta,
-    // mas a lógica do Prisma que você tinha estava correta.
+    const total = await prisma.cosmetico.count();
     
-    const pageSize = 20;
-    const page = parseInt(pageQuery) || 1;
-    const skip = (page - 1) * pageSize;
-
-    const where = {
-       // Seus filtros aqui...
-       nome: nome ? { contains: nome } : undefined,
-       // Adicione o resto da sua lógica de filtro se precisar usar essa rota específica
-    };
-
-    const cosmeticos = await prisma.cosmetico.findMany({
+    const data = await prisma.cosmetico.findMany({
+      skip: (page - 1) * pageSize,
       take: pageSize,
-      skip,
+      orderBy: { nome: 'asc' }
     });
 
-    res.json({ data: cosmeticos });
-
-  } catch (error) {
-    console.error('Erro ao buscar cosméticos:', error.message);
-    res.status(500).json({ error: 'Erro interno.' });
+    res.json({ 
+      data,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize)
+      }
+    });
+  } catch (err) {
+    console.error('Erro ao listar cosméticos:', err);
+    res.status(500).json({ erro: 'Erro ao listar cosméticos.' });
   }
 });
 
+// ------------------------- FILTRAR COM TIPO E DATA -------------------------
+app.get('/api/cosmeticos/filtrar', async (req, res) => {
+  try {
+    const { nome, tipo, raridade, inicio, fim, novo, venda, promocao } = req.query;
+
+    const where = {};
+
+    if (nome) where.nome = { contains: nome, mode: 'insensitive' };
+    if (tipo && tipo !== 'todos') where.tipo = tipo; // ✅ FILTRO DE TIPO CORRIGIDO
+    if (raridade && raridade !== 'todos') where.raridade = raridade;
+    if (novo === 'true') where.isNew = true;
+    if (venda === 'true') where.isForSale = true;
+    if (promocao === 'true') where.isPromo = true;
+
+    // ✅ FILTRO DE DATA CORRIGIDO
+    if (inicio && fim) {
+      where.addedAt = { 
+        gte: new Date(inicio + 'T00:00:00.000Z'), 
+        lte: new Date(fim + 'T23:59:59.999Z') 
+      };
+    } else if (inicio) {
+      where.addedAt = { gte: new Date(inicio + 'T00:00:00.000Z') };
+    } else if (fim) {
+      where.addedAt = { lte: new Date(fim + 'T23:59:59.999Z') };
+    }
+
+    const data = await prisma.cosmetico.findMany({ 
+      where,
+      orderBy: { nome: 'asc' }
+    });
+
+    res.json({ data, total: data.length });
+  } catch (err) {
+    console.error('Erro ao filtrar:', err);
+    res.status(500).json({ erro: 'Erro ao filtrar cosméticos.' });
+  }
+});
+
+// ------------------------- APENAS NOVOS -------------------------
+app.get('/api/cosmeticos/novos', async (req, res) => {
+  try {
+    const data = await prisma.cosmetico.findMany({
+      where: { isNew: true },
+      orderBy: { addedAt: 'desc' }
+    });
+    res.json({ data });
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao buscar novos.' });
+  }
+});
+
+// ------------------------- APENAS À VENDA -------------------------
+app.get('/api/cosmeticos/venda', async (req, res) => {
+  try {
+    const data = await prisma.cosmetico.findMany({
+      where: { isForSale: true },
+      orderBy: { nome: 'asc' }
+    });
+    res.json({ data });
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao buscar itens à venda.' });
+  }
+});
+
+// ------------------------- APENAS EM PROMOÇÃO -------------------------
+app.get('/api/cosmeticos/promocao', async (req, res) => {
+  try {
+    const data = await prisma.cosmetico.findMany({
+      where: { isPromo: true },
+      orderBy: { nome: 'asc' }
+    });
+    res.json({ data });
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao buscar promoções.' });
+  }
+});
+
+// ------------------------- DETALHES DO COSMÉTICO -------------------------
+app.get('/api/cosmeticos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const item = await prisma.cosmetico.findUnique({
+      where: { id }
+    });
+
+    if (!item) {
+      return res.status(404).json({ erro: 'Cosmético não encontrado.' });
+    }
+
+    res.json({ item });
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao buscar detalhes.' });
+  }
+});
+
+// ------------------------- PERFIL PÚBLICO PAGINADO -------------------------
+app.get('/api/usuarios', async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const pageSize = Number(req.query.limit) || 50;
+
+    const total = await prisma.usuario.count();
+
+    const data = await prisma.usuario.findMany({
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      select: {
+        id: true,
+        email: true,
+        vbucks: true,
+        createdAt: true,
+        itensComprados: {
+          select: {
+            id: true,
+            dataCompra: true,
+            cosmetico: {
+              select: {
+                nome: true,
+                imagemUrl: true,
+                raridade: true,
+                tipo: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({ 
+      data,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize)
+      }
+    });
+  } catch (err) {
+    console.error('Erro ao listar usuários:', err);
+    res.status(500).json({ erro: 'Erro ao listar usuários.' });
+  }
+});
+
+// ------------------------- DETALHES PÚBLICOS DO USUÁRIO -------------------------
+app.get('/api/usuarios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const data = await prisma.usuario.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        vbucks: true,
+        createdAt: true,
+        itensComprados: {
+          include: { 
+            cosmetico: true 
+          },
+          orderBy: { dataCompra: 'desc' }
+        }
+      }
+    });
+
+    if (!data) {
+      return res.status(404).json({ erro: 'Usuário não encontrado.' });
+    }
+
+    res.json({ data });
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao buscar usuário.' });
+  }
+});
+
+// ------------------------- TIPOS DISPONÍVEIS -------------------------
+app.get('/api/tipos', async (req, res) => {
+  try {
+    const tipos = await prisma.cosmetico.groupBy({
+      by: ['tipo'],
+      _count: {
+        tipo: true
+      },
+      where: {
+        tipo: {
+          not: null
+        }
+      },
+      orderBy: {
+        tipo: 'asc'
+      }
+    });
+    
+    const tiposLista = tipos
+      .map(t => t.tipo)
+      .filter(t => t && t !== 'N/A' && t.trim() !== '');
+    
+    console.log(`✅ ${tiposLista.length} tipos únicos encontrados`);
+    
+    res.json({ tipos: tiposLista });
+  } catch (err) {
+    console.error('Erro ao buscar tipos:', err);
+    res.status(500).json({ erro: 'Erro ao buscar tipos.' });
+  }
+});
+
+// ------------------------- RARIDADES DISPONÍVEIS -------------------------
+app.get('/api/raridades', async (req, res) => {
+  try {
+    const raridades = await prisma.cosmetico.findMany({
+      select: { raridade: true },
+      distinct: ['raridade'],
+      orderBy: { raridade: 'asc' }
+    });
+    
+    res.json({ raridades: raridades.map(r => r.raridade).filter(r => r) });
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao buscar raridades.' });
+  }
+});
+
+// ------------------------- STATIC SERVE -------------------------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 app.use(express.static(path.join(__dirname, '../Frontend')));
 
-// Inicia a sincronização em segundo plano (não trava o servidor)
-syncCosmetics(); 
-
+// ------------------------- START SERVER -------------------------
 app.listen(PORT, () => {
   console.log(`🚀 Servidor backend rodando na porta ${PORT}`);
-  console.log(`- Login: http://localhost:${PORT}/login`);
-  console.log(`- Loja: http://localhost:${PORT}/store/itens`);
+  console.log(`🌐 Aceitando requisições de: ${FRONTEND}`);
 });

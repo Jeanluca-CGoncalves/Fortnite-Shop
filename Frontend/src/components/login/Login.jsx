@@ -7,23 +7,18 @@ import "./Login.css";
 const Login = () => {
   const [email, setEmail] = useState(""); 
   const [password, setPassword] = useState("");
-  
-  const navigate = useNavigate(); 
-
-  // 🔥 AQUI ESTÁ O TESTE CORRETO:
-  console.log("URL BASE DO AXIOS:", api.defaults.baseURL);
+  const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
       const response = await api.post("/login", { email, password });
-
       localStorage.setItem("usuario", JSON.stringify(response.data.user));
       alert("Login realizado com sucesso!");
       navigate("/"); 
     } catch (error) {
       console.error("Erro:", error);
-      const mensagem = error.response?.data?.message || "Erro ao conectar.";
+      const mensagem = error.response?.data?.erro || "Erro ao conectar.";
       alert(mensagem);
     }
   };
@@ -32,7 +27,6 @@ const Login = () => {
     <div className='Container'>
       <form onSubmit={handleSubmit}>
         <h1>Acesse o sistema</h1>
-
         <div className="input-field">
           <input 
             type="email"
@@ -43,7 +37,6 @@ const Login = () => {
           />
           <FaUser className='icon' />
         </div>
-
         <div className="input-field">
           <input 
             type="password" 
@@ -54,9 +47,7 @@ const Login = () => {
           />
           <FaLock className='icon' />
         </div>
-
         <button type="submit">Entrar</button>
-
         <div className="signup-link">
           <p>Não tem uma conta? <Link to="/cadastro">Criar conta</Link></p>
         </div>

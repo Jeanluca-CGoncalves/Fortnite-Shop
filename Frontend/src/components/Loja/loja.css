@@ -30,7 +30,7 @@
 .loja-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end; /* Alinha a base do título com os inputs */
+    align-items: flex-end;
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--border-color);
@@ -44,7 +44,7 @@
     font-style: italic;
     text-transform: uppercase;
     margin: 0;
-    text-shadow: 3px 3px 0px rgba(0,0,0,0.2); /* Sombra para destacar no azul */
+    text-shadow: 3px 3px 0px rgba(0,0,0,0.2);
 }
 
 .header-content p {
@@ -67,10 +67,10 @@
 
 .search-bar input {
     width: 100%;
-    background-color: rgba(0,0,0,0.2); /* Fundo escuro translúcido */
+    background-color: rgba(0,0,0,0.2);
     border: 2px solid var(--border-color);
     border-radius: 50px;
-    padding: 12px 20px 12px 45px; /* Espaço para o ícone */
+    padding: 12px 20px 12px 45px;
     color: white;
     font-size: 0.95rem;
     outline: none;
@@ -92,47 +92,6 @@
     top: 50%;
     transform: translateY(-50%);
     color: rgba(255,255,255,0.7);
-}
-
-/* --- FILTRO DE RARIDADE (SELECT) --- */
-.filter-box {
-    position: relative;
-    width: 220px;
-}
-
-.filter-icon {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--accent-yellow); /* Ícone amarelo */
-    z-index: 1;
-}
-
-.filter-box select {
-    width: 100%;
-    padding: 12px 20px 12px 45px;
-    background-color: rgba(0,0,0,0.2);
-    border: 2px solid var(--border-color);
-    border-radius: 50px;
-    color: white;
-    font-weight: 600;
-    font-size: 0.95rem;
-    outline: none;
-    cursor: pointer;
-    appearance: none; /* Remove a seta padrão do navegador */
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    transition: background-color 0.3s;
-}
-
-.filter-box select:hover {
-    background-color: rgba(0,0,0,0.3);
-}
-
-.filter-box select option {
-    background-color: #0D1117; /* Opções com fundo escuro sólido para leitura */
-    color: white;
 }
 
 /* --- GRID DE ITENS --- */
@@ -165,8 +124,9 @@
 .shop-card.border-rare { border-bottom: 6px solid var(--color-rare); }
 .shop-card.border-uncommon { border-bottom: 6px solid var(--color-uncommon); }
 .shop-card.border-marvel { border-bottom: 6px solid var(--color-marvel); }
-.shop-card.border-icon_series { border-bottom: 6px solid var(--color-icon); }
-.shop-card.border-dc_series { border-bottom: 6px solid var(--color-dc); }
+.shop-card[class*="border-marvel"] { border-bottom: 6px solid var(--color-marvel); }
+.shop-card[class*="border-icon"] { border-bottom: 6px solid var(--color-icon); }
+.shop-card[class*="border-dc"] { border-bottom: 6px solid var(--color-dc); }
 
 /* Área da Imagem */
 .card-image-box {
@@ -184,10 +144,10 @@
 }
 
 .shop-card:hover .card-image-box img {
-    transform: scale(1.1); /* Zoom na imagem ao passar o mouse */
+    transform: scale(1.1);
 }
 
-/* Tag de Raridade (Pequena etiqueta na imagem) */
+/* Tag de Raridade */
 .rarity-label {
     position: absolute;
     top: 10px;
@@ -206,9 +166,9 @@
 .bg-epic { background-color: var(--color-epic); }
 .bg-rare { background-color: var(--color-rare); }
 .bg-uncommon { background-color: var(--color-uncommon); }
-.bg-marvel { background-color: var(--color-marvel); }
-.bg-icon_series { background-color: var(--color-icon); }
-.bg-dc_series { background-color: var(--color-dc); }
+.bg-marvel, [class*="bg-marvel"] { background-color: var(--color-marvel); }
+.bg-icon_series, [class*="bg-icon"] { background-color: var(--color-icon); }
+.bg-dc_series, [class*="bg-dc"] { background-color: var(--color-dc); }
 .bg-common { background-color: var(--color-common); }
 
 /* --- INFORMAÇÕES DO CARD --- */
@@ -270,9 +230,14 @@
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.buy-btn:hover {
+.buy-btn:hover:not(:disabled) {
     transform: scale(1.03);
-    box-shadow: 0 4px 15px rgba(255, 196, 0, 0.4); /* Brilho amarelo */
+    box-shadow: 0 4px 15px rgba(255, 196, 0, 0.4);
+}
+
+.buy-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* --- LOADING SPINNER --- */
@@ -300,15 +265,12 @@
     100% { transform: rotate(360deg); }
 }
 
-/* ... MANTENHA O RESTO DO SEU CSS ... */
-
-/* --- NOVO ESTILO DE FILTRO MÚLTIPLO --- */
+/* --- FILTRO MÚLTIPLO --- */
 .filter-wrapper {
     position: relative;
     width: 200px;
 }
 
-/* Botão que abre o menu */
 .filter-btn-toggle {
     width: 100%;
     padding: 12px 20px;
@@ -335,21 +297,42 @@
     transform: rotate(180deg);
 }
 
-/* O Menu Flutuante (Dropdown) */
+/* Menu Dropdown */
 .filter-dropdown {
     position: absolute;
-    top: 110%; /* Logo abaixo do botão */
+    top: 110%;
     right: 0;
-    width: 220px;
-    background-color: #0D1117; /* Fundo escuro sólido */
+    width: 280px; /* AUMENTADO PARA CABER MAIS FILTROS */
+    max-height: 500px;
+    overflow-y: auto;
+    background-color: #0D1117;
     border: 1px solid var(--border-color);
     border-radius: 15px;
     padding: 15px;
-    z-index: 100; /* Garante que fique por cima dos cards */
+    z-index: 100;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+/* Scroll customizado */
+.filter-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.filter-dropdown::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+}
+
+.filter-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+}
+
+.filter-dropdown::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.3);
 }
 
 /* Opções do Checkbox */
@@ -371,19 +354,88 @@
     cursor: pointer;
     width: 16px;
     height: 16px;
-    accent-color: var(--accent-yellow); /* Checkbox amarelo */
+    accent-color: var(--accent-yellow);
 }
 
 .clear-filter {
     margin-top: 10px;
-    padding: 8px;
+    padding: 10px;
     background: none;
     border: 1px dashed var(--border-color);
-    color: rgba(255,255,255,0.6);
+    color: rgba(255,255,255,0.8);
     cursor: pointer;
     border-radius: 5px;
+    font-weight: 600;
 }
 .clear-filter:hover {
     background-color: rgba(255,0,0,0.2);
+    color: white;
+    border-color: #ff5252;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .loja-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .search-bar, .filter-wrapper {
+        width: 100%;
+    }
+    
+    .items-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+}
+
+/* PAGINAÇÃO */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-top: 40px;
+    padding: 20px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.pagination-btn {
+    padding: 12px 25px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: #555;
+}
+
+.pagination-info {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
     color: white;
 }

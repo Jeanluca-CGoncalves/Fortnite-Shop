@@ -1,13 +1,15 @@
-import { Link, useLocation } from 'react-router-dom'; // 1. Importe useLocation
-import { FaUserCircle, FaStore, FaStar, FaSignOutAlt } from "react-icons/fa";
+// Frontend/src/components/layout/navbar.jsx
+
+import { Link, useLocation } from 'react-router-dom';
+import { FaUserCircle, FaStore, FaStar, FaSignOutAlt, FaUsers } from "react-icons/fa";
 import './navbar.css'; 
 import Logo from '../../assets/Logo.jpg'; 
 import Vbucks from '../../assets/vbucks.png';
-import { FaUsers } from "react-icons/fa";
 
-function Navbar() { 
-    const userBalance = 1500; 
-    const location = useLocation(); // 2. Pegue a localização atual
+// O componente agora espera a prop 'saldo'
+function Navbar({ saldo }) { 
+    // REMOVIDO: const userBalance = 1500; 
+    const location = useLocation(); 
 
     return(
         <nav className="navbar"> 
@@ -25,7 +27,6 @@ function Navbar() {
                     <li>
                         <Link 
                             to="/" 
-                            // 3. Lógica: Se o caminho for "/", ativa a classe
                             className={`nav-item ${location.pathname === '/' ? 'active' : ''}`}
                         >
                             <FaStore /> Loja
@@ -34,27 +35,28 @@ function Navbar() {
                     <li>
                         <Link 
                             to="/novidades" 
-                            // 4. Lógica: Se o caminho for "/novidades", ativa a classe
                             className={`nav-item ${location.pathname === '/novidades' ? 'active' : ''}`}
                         >
                             <FaStar /> Novidades
                         </Link>
                     </li>
                     <li>
-    <Link 
-        to="/comunidade" 
-        className={`nav-item ${location.pathname === '/comunidade' ? 'active' : ''}`}
-    >
-        <FaUsers /> Comunidade
-    </Link>
-</li>
+                        <Link 
+                            to="/comunidade" 
+                            className={`nav-item ${location.pathname === '/comunidade' ? 'active' : ''}`}
+                        >
+                            <FaUsers /> Comunidade
+                        </Link>
+                    </li>
                 </ul>
             </div>
 
             {/* DIREITA */}
             <div className="navbar-section right">
+                {/* EXIBE A PROP 'SALDO' */}
                 <div className="balance-pill">
-                    <span>{userBalance}</span>
+                    {/* Exibe o saldo recebido e formatado */}
+                    <span>{saldo ? saldo.toLocaleString() : '0'}</span> 
                     <img src={Vbucks} alt="V-Bucks" className="icon-vbucks-nav" />
                 </div>
 

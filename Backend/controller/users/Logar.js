@@ -5,9 +5,10 @@ import bcrypt from 'bcrypt';
 
 export default async function Logar(req, res) {
   try {
-    const { email, senha } = req.body;
+    // Aceita { email, password } do frontend
+    const { email, password } = req.body;
 
-    if (!email || !senha) {
+    if (!email || !password) {
       return res.status(400).json({ erro: 'E-mail e senha são obrigatórios.' });
     }
 
@@ -22,18 +23,30 @@ export default async function Logar(req, res) {
       return res.status(401).json({ erro: 'E-mail ou senha incorretos.' });
     }
 
-    const senhaConfere = await bcrypt.compare(senha, user.senhaHash);
+    const senhaConfere = await bcrypt.compare(password, user.senhaHash);
     if (!senhaConfere) {
       return res.status(401).json({ erro: 'E-mail ou senha incorretos.' });
     }
+
     const token = jwt.sign(
       { id: user.id, nome: user.email },
       'ProtegerToken',
       { expiresIn: '1h' }
     );
 
-    res.cookie('Token', token, { httpOnly: true });
-    res.status(200).json({ mensagem: 'Login realizado com sucesso!' });
+    // Cookie HttpOnly e sameSite = lax (funciona para dev local)
+    res.cookie('Token', token, { httpOnly: true, sameSite: 'lax' });
+
+    // Retorna user para o frontend (útil para preencher UI)
+    res.status(200).json({
+      mensagem: 'Login realizado com sucesso!',
+      user: {
+        id: user.id,
+        email: user.email,
+        nome: user.nome ?? user.email,
+        vbucks: user.vbucks ?? 0
+      }
+    });
 
   } catch (error) {
     console.error('Erro no login:', error.message);

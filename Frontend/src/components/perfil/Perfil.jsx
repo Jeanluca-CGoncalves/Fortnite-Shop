@@ -1,132 +1,151 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Perfil.css';
-import { 
-  FaUserCircle, 
-  FaWallet, 
-  FaStar, 
-  FaUndo 
-} from 'react-icons/fa';
+import { FaUserCircle, FaWallet, FaStar, FaUndo } from 'react-icons/fa';
 
-// Importação da imagem que você fez
-import Vbucks from '../../assets/vbucks.png'; 
-
-const userData = {
-  id: "Shadow Striker",
-  email: "player@fortnite.com",
-};
-
-const walletData = {
-  vbucks: 1500,
-};
-
-const skinsData = [
-  { id: 1, name: "Raven", rarity: "Legendary", imageUrl: "https://via.placeholder.com/300x200?text=Raven+Skin" },
-  { id: 2, name: "Drift", rarity: "Epic", imageUrl: "https://via.placeholder.com/300x200?text=Drift+Skin" },
-  { id: 3, name: "Peely", rarity: "Epic", imageUrl: "https://via.placeholder.com/300x200?text=Peely+Skin" },
-  { id: 4, name: "Saturn", rarity: "Legendary", imageUrl: "https://via.placeholder.com/300x200?text=Saturn+Skin" },
-  { id: 5, name: "Nebula", rarity: "Epic", imageUrl: "https://via.placeholder.com/300x200?text=Nebula+Skin" },
-  { id: 6, name: "Uranus", rarity: "Legendary", imageUrl: "https://via.placeholder.com/300x200?text=Uranus+Skin" },
-];
+import api from "../../services/api";  // CAMINHO CORRIGIDO
+import Vbucks from '../../assets/vbucks.png';
 
 const Perfil = () => {
-  const [activeTab, setActiveTab] = useState('skins'); 
 
-  const handleRefund = (itemName) => {
-    alert(`Você devolveu o item: ${itemName}. Seus V-Bucks foram estornados.`);
+  const [activeTab, setActiveTab] = useState('skins');
+  const [user, setUser] = useState(null);
+  const [inventario, setInventario] = useState([]);
+  const [historico, setHistorico] = useState([]);
+
+  const fetchUser = async () => {
+    try {
+      const response = await api.get("/privado");
+      setUser(response.data.usuario);
+    } catch {
+      alert("Erro ao carregar usuário.");
+    }
   };
+
+  const fetchInventario = async () => {
+    try {
+      const response = await api.get("/inventario");
+      setInventario(response.data.itens);
+    } catch (err) {}
+  };
+
+  const fetchHistorico = async () => {
+    try {
+      const response = await api.get("/historico");
+      setHistorico(response.data);
+    } catch (err) {}
+  };
+
+  useEffect(() => {
+    fetchUser();
+    fetchInventario();
+    fetchHistorico();
+  }, []);
+
+  const handleRefund = async (itemId) => {
+    try {
+      await api.post("/refund", { itemId });
+      alert("Item devolvido!");
+      fetchInventario();
+      fetchHistorico();
+      fetchUser();
+    } catch {
+      alert("Erro ao devolver item.");
+    }
+  };
+
+  if (!user) return <p style={{ color: "white", textAlign: "center" }}>Carregando...</p>;
 
   return (
     <div className="player-profile-page">
-      
+
       <header className="profile-main-header">
         <h1>Meu Perfil</h1>
       </header>
 
       <section className="profile-top-section">
 
-        {/* CARD DE INFORMAÇÕES */}
+        {/* INFO */}
         <div className="profile-card info-card">
           <header className="profile-card-header">
             <h3><FaUserCircle /> Informações Pessoais</h3>
           </header>
+
           <div className="info-card-body">
             <div className="avatar-container">
-                <FaUserCircle className="avatar-icon" />
+              <FaUserCircle className="avatar-icon" />
             </div>
+
             <div className="user-details">
               <div className="detail-group">
-                <span className="detail-label">ID do Jogador</span>
-                <h4>{userData.id}</h4>
+                <span className="detail-label">ID</span>
+                <h4>{user.id}</h4>
               </div>
+
               <div className="detail-group">
                 <span className="detail-label">E-mail</span>
-                <h4>{userData.email}</h4>
+                <h4>{user.email}</h4>
               </div>
             </div>
           </div>
         </div>
 
-        {/* CARD DA CARTEIRA */}
+        {/* SALDO */}
         <div className="profile-card wallet-card">
           <header className="profile-card-header">
             <h3><FaWallet /> Saldo</h3>
           </header>
+
           <div className="wallet-body centered">
             <div className="vbucks-display-large">
-                <span className="detail-label">Seus V-Bucks</span>
-                <div className="vbucks-value-row">
-                    
-                    {/* AQUI ESTÁ A IMAGEM DO VBUCKS */}
-                    <img src={Vbucks} alt="V-Bucks" className="vbucks-icon-img" />
-                    
-                    <h2>{walletData.vbucks}</h2>
-                </div>
+              <span className="detail-label">Seus V-Bucks</span>
+
+              <div className="vbucks-value-row">
+                <img src={Vbucks} alt="V-Bucks" className="vbucks-icon-img" />
+                <h2>{user.vbucks}</h2>
+              </div>
+
             </div>
           </div>
         </div>
 
       </section>
 
+      {/* TABS */}
       <nav className="profile-tabs">
-        <button 
-          className={activeTab === 'skins' ? 'active' : ''}
-          onClick={() => setActiveTab('skins')}
-        >
+        <button className={activeTab === 'skins' ? 'active' : ''} onClick={() => setActiveTab('skins')}>
           Meus Itens
         </button>
-        <button 
-          className={activeTab === 'history' ? 'active' : ''}
-          onClick={() => setActiveTab('history')}
-        >
-          Histórico de Compras
+        <button className={activeTab === 'history' ? 'active' : ''} onClick={() => setActiveTab('history')}>
+          Histórico
         </button>
       </nav>
 
       <main className="profile-content">
-        
+
+        {/* INVENTÁRIO */}
         {activeTab === 'skins' && (
           <section className="skins-collection">
-            <div className="tab-header">
-                 <h2 className="content-title"><FaStar /> Itens Adquiridos ({skinsData.length})</h2>
-            </div>
-           
+            <h2 className="content-title">
+              <FaStar /> Itens Adquiridos ({inventario.length})
+            </h2>
+
             <div className="skins-grid">
-              {skinsData.map(skin => (
-                <div className="skin-card" key={skin.id}>
+              {inventario.map(item => (
+                <div className="skin-card" key={item.id}>
                   <div className="skin-image-container">
-                    <img src={skin.imageUrl} alt={skin.name} />
-                    <span className={`rarity-tag ${skin.rarity.toLowerCase()}`}>
-                      {skin.rarity}
+                    <img src={item.cosmetico.imagemUrl} alt={item.cosmetico.nome} />
+                    <span className={`rarity-tag ${item.cosmetico.raridade}`}>
+                      {item.cosmetico.raridade}
                     </span>
                   </div>
+
                   <div className="skin-card-footer">
-                    <h4>{skin.name}</h4>
-                    <button 
-                        className="refund-btn" 
-                        onClick={() => handleRefund(skin.name)}
-                    >
-                        <FaUndo /> Desfazer compra
+                    <h4>{item.cosmetico.nome}</h4>
+
+                    <button className="refund-btn" onClick={() => handleRefund(item.id)}>
+                      <FaUndo /> Desfazer compra
                     </button>
+
                   </div>
                 </div>
               ))}
@@ -134,16 +153,29 @@ const Perfil = () => {
           </section>
         )}
 
+        {/* HISTÓRICO */}
         {activeTab === 'history' && (
           <section className="purchase-history">
             <h2 className="content-title">Histórico</h2>
-            <div className="empty-state">
-                <p>Nenhuma transação recente.</p>
-            </div>
+
+            {historico.length === 0 ? (
+              <div className="empty-state"><p>Nenhuma transação encontrada.</p></div>
+            ) : (
+              <ul className="history-list">
+                {historico.map(h => (
+                  <li key={h.id}>
+                    {h.tipo === "COMPRA" ? `Comprou ${h.item.nome}` : `Estornou ${h.item.nome}`}
+                    — {new Date(h.data).toLocaleString("pt-BR")}
+                  </li>
+                ))}
+              </ul>
+            )}
+
           </section>
         )}
 
       </main>
+
     </div>
   );
 };
