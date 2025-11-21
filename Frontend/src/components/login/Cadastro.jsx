@@ -15,9 +15,9 @@ const Cadastro = () => {
 
     try {
       await api.post("/register", {
-        email,
-        senha,
-      });
+  email,
+  password: senha, 
+});
 
       alert("Conta criada com sucesso!");
       navigate("/login");
