@@ -10,13 +10,14 @@ import { fileURLToPath } from 'url';
 
 const prisma = new PrismaClient();
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 const FRONTEND_LOCAL = "http://localhost:5173";
-const FRONTEND_AWS = "http://3.227.233.172:5173";
+const FRONTEND_VERCEL = "https://fortnite-shop-zeta.vercel.app"; 
+const FRONTEND_VERCEL_ALT = "https://fortnite-shop-orrub7mv7-jeanluca-cgoncalves-projects.vercel.app";
 
 app.use(cors({
-  origin: [FRONTEND_LOCAL, FRONTEND_AWS],
+  origin: [FRONTEND_LOCAL, FRONTEND_VERCEL, FRONTEND_VERCEL_ALT],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -356,5 +357,5 @@ app.use(express.static(path.join(__dirname, '../Frontend')));
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor backend rodando na porta ${PORT}`);
-  console.log(`🌐 Aceitando requisições de: ${FRONTEND_LOCAL} e ${FRONTEND_AWS}`);
+  console.log(`🔓 Aceitando requisições de: ${FRONTEND_LOCAL} e VERCEL`);
 });
