@@ -10,14 +10,24 @@ import { fileURLToPath } from 'url';
 
 const prisma = new PrismaClient();
 const app = express();
+
 const PORT = process.env.PORT || 3001;
 
-const FRONTEND_LOCAL = "http://localhost:5173";
-const FRONTEND_VERCEL = "https://fortnite-shop-zeta.vercel.app"; 
-const FRONTEND_VERCEL_ALT = "https://fortnite-shop-orrub7mv7-jeanluca-cgoncalves-projects.vercel.app";
-
 app.use(cors({
-  origin: [FRONTEND_LOCAL, FRONTEND_VERCEL, FRONTEND_VERCEL_ALT],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (
+      origin.includes("localhost") || 
+      origin.includes(".vercel.app") || 
+      origin.includes(".onrender.com")
+    ) {
+      return callback(null, true);
+    } else {
+      console.log("Bloqueado pelo CORS:", origin);
+      return callback(new Error("Não permitido pelo CORS"));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -86,6 +96,7 @@ async function syncCosmetics() {
   });
 
   if (allItems.length > 0) {
+    console.log(`Iniciando sincronização de ${allItems.length} itens...`);
     for (const item of allItems) {
       const info = shopPriceMap.get(item.id);
       
@@ -116,6 +127,7 @@ async function syncCosmetics() {
         }
       });
     }
+    console.log('Sincronização concluída!');
   } else {
     console.warn('Sincronização ignorada: lista principal de cosméticos indisponível.');
   }
@@ -125,6 +137,7 @@ syncCosmetics();
 
 app.use('/', usuariosRoutes);
 app.use('/store', lojaRoutes);
+
 
 app.get('/api/cosmeticos', async (req, res) => {
   try {
@@ -352,10 +365,8 @@ app.get('/api/raridades', async (req, res) => {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 app.use(express.static(path.join(__dirname, '../Frontend')));
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor backend rodando na porta ${PORT}`);
-  console.log(`🔓 Aceitando requisições de: ${FRONTEND_LOCAL} e VERCEL`);
 });
