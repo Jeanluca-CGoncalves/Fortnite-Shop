@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Comunidade.css';
+import './comunidade.css';
 import { FaSearch, FaUserCircle, FaTimes, FaStar } from 'react-icons/fa';
 import api from '../../services/api';
 
@@ -9,18 +9,14 @@ const Comunidade = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Buscar USUÁRIOS REAIS do banco de dados
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await api.get('/api/usuarios?limit=100');
         const usuarios = response.data.data;
-        
-        console.log(`✅ ${usuarios.length} usuários encontrados!`);
         setUsers(usuarios);
         setLoading(false);
       } catch (error) {
-        console.error('Erro ao buscar usuários:', error);
         setLoading(false);
       }
     };
@@ -28,7 +24,6 @@ const Comunidade = () => {
     fetchUsers();
   }, []);
 
-  // ✅ Buscar ITENS de um usuário específico
   const verColecao = async (userId) => {
     try {
       const response = await api.get(`/api/usuarios/${userId}`);
@@ -47,18 +42,13 @@ const Comunidade = () => {
           dataCompra: item.dataCompra
         })) || []
       });
-    } catch (error) {
-      console.error('Erro ao buscar coleção:', error);
-      alert('Erro ao carregar coleção do usuário');
-    }
+    } catch (error) {}
   };
 
-  // Filtra usuários pelo email
   const filteredUsers = users.filter(user => 
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Cores aleatórias para avatares
   const avatarColors = ['#d37e28', '#8a2be2', '#00d8ff', '#66cc33', '#ed1d24', '#00cfba'];
   const getRandomColor = (index) => avatarColors[index % avatarColors.length];
 
@@ -93,7 +83,6 @@ const Comunidade = () => {
         </div>
       </header>
 
-      {/* GRID DE JOGADORES */}
       <div className="users-grid">
         {filteredUsers.length === 0 ? (
           <p style={{textAlign: 'center', fontSize: '1.5rem', gridColumn: '1/-1', color: 'white'}}>
@@ -109,7 +98,7 @@ const Comunidade = () => {
                     <h3>{user.email.split('@')[0]}</h3>
                     <p>{user.itensComprados?.length || 0} Itens adquiridos</p>
                     <p style={{fontSize: '0.85rem', opacity: 0.7}}>
-                      💰 {user.vbucks?.toLocaleString() || 0} V-Bucks
+                      {user.vbucks?.toLocaleString() || 0} V-Bucks
                     </p>
                 </div>
                 <button 
@@ -123,7 +112,6 @@ const Comunidade = () => {
         )}
       </div>
 
-      {/* MODAL (Abre quando clica num usuário) */}
       {selectedUser && (
         <div className="modal-overlay" onClick={() => setSelectedUser(null)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -134,7 +122,7 @@ const Comunidade = () => {
                             <h2>{selectedUser.email.split('@')[0]}</h2>
                             <span>Email: {selectedUser.email}</span>
                             <p style={{marginTop: '5px', fontSize: '1rem'}}>
-                              💰 Saldo: {selectedUser.vbucks?.toLocaleString() || 0} V-Bucks
+                              Saldo: {selectedUser.vbucks?.toLocaleString() || 0} V-Bucks
                             </p>
                         </div>
                     </div>

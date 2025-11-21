@@ -47,14 +47,13 @@ model ItemComprado {
 }
 
 model HistoricoTransacao {
-  id           String     @id @default(uuid())
-  usuarioId    String
-  cosmeticoId  String?
-  tipo         String
-  data         DateTime   @default(now())
+  id             String    @id @default(uuid())
+  usuarioId      String
+  cosmeticoId    String?
+  tipo           String
+  valorVbucks    Int       
+  data           DateTime  @default(now())
 
-  usuario      Usuario    @relation(fields: [usuarioId], references: [id])
-  cosmetico    Cosmetico? @relation(fields: [cosmeticoId], references: [id])
+  usuario        Usuario   @relation(fields: [usuarioId], references: [id])
+  cosmetico      Cosmetico? @relation(fields: [cosmeticoId], references: [id])
 }
-
-

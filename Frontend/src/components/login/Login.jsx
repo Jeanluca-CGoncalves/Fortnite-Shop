@@ -15,9 +15,8 @@ const Login = () => {
       const response = await api.post("/login", { email, password });
       localStorage.setItem("usuario", JSON.stringify(response.data.user));
       alert("Login realizado com sucesso!");
-      navigate("/"); 
+      navigate("/");
     } catch (error) {
-      console.error("Erro:", error);
       const mensagem = error.response?.data?.erro || "Erro ao conectar.";
       alert(mensagem);
     }
@@ -53,7 +52,7 @@ const Login = () => {
         </div>
       </form>
     </div>
-  )
-}
+  );
+};
 
 export default Login;

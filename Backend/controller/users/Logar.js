@@ -5,7 +5,6 @@ import bcrypt from 'bcrypt';
 
 export default async function Logar(req, res) {
   try {
-    // Aceita { email, password } do frontend
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -34,11 +33,9 @@ export default async function Logar(req, res) {
       { expiresIn: '1h' }
     );
 
-    // Cookie HttpOnly e sameSite = lax (funciona para dev local)
     res.cookie('Token', token, { httpOnly: true, sameSite: 'lax' });
 
-    // Retorna user para o frontend (útil para preencher UI)
-    res.status(200).json({
+     res.status(200).json({
       mensagem: 'Login realizado com sucesso!',
       user: {
         id: user.id,

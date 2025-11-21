@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  
+  backend:
+    build:
+      context: ./Backend  
+      dockerfile: Dockerfile
+    container_name: fortnite-backend
+    ports:
+      - "3001:3001"       
+    environment:
+      NODE_ENV: production
+    volumes:
+      - backend-data:/app/prisma
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: fortnite-frontend
+    ports:
+      - "5173:80"        
+    depends_on:
+      - backend           
+    environment:
+      VITE_API_URL: http://localhost:3001 
+volumes:
+  backend-data:

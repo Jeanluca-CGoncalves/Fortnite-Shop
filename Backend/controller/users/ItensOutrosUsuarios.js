@@ -6,12 +6,10 @@ export default async function ItensDeOutroUsuario(req, res) {
     const usuarioLogado = req.userId;
     const { id } = req.params;
 
-    // 1️⃣ Verificar se está autenticado
     if (!usuarioLogado) {
       return res.status(401).json({ erro: 'Usuário não autenticado.' });
     }
 
-    // 2️⃣ Verificar se o usuário consultado existe
     const usuario = await prisma.usuario.findUnique({
       where: { id },
       select: { id: true, email: true }
@@ -21,7 +19,6 @@ export default async function ItensDeOutroUsuario(req, res) {
       return res.status(404).json({ erro: 'Usuário não encontrado.' });
     }
 
-    // 3️⃣ Buscar os itens comprados por esse usuário
     const itens = await prisma.itemComprado.findMany({
       where: { usuarioId: id },
       include: {
@@ -39,7 +36,6 @@ export default async function ItensDeOutroUsuario(req, res) {
       orderBy: { dataCompra: 'desc' }
     });
 
-    // 4️⃣ Montar resposta limpa
     const resultado = {
       usuario: usuario.email,
       totalItens: itens.length,

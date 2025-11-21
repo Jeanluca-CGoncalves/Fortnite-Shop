@@ -1,20 +1,15 @@
-// Frontend/src/components/Loja/loja.jsx
-
 import React, { useEffect, useState } from 'react';
-import './Loja.css';
+import './loja.css';
 import { FaShoppingCart, FaSearch, FaFilter, FaChevronDown } from 'react-icons/fa';
 import Vbucks from '../../assets/vbucks.png';
 import api from "../../services/api";
 
-// 1. O componente agora recebe 'saldo' e 'setSaldo' como props
 const Loja = ({ saldo, setSaldo }) => { 
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  // REMOVIDO: const [saldo, setSaldo] = useState(0); 
   const [usuarioLogado, setUsuarioLogado] = useState(null);
 
-  // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedRarities, setSelectedRarities] = useState([]);
@@ -25,7 +20,6 @@ const Loja = ({ saldo, setSaldo }) => {
   const [apenasVenda, setApenasVenda] = useState(false);
   const [apenasPromo, setApenasPromo] = useState(false);
 
-  // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 100;
 
@@ -39,31 +33,25 @@ const Loja = ({ saldo, setSaldo }) => {
     { value: 'Icon Series', label: 'Série Ícones', color: '#00cfba' },
     { value: 'Marvel Series', label: 'Marvel', color: '#ed1d24' }
   ];
-
-    // 2. REMOVIDO: O useEffect que buscava o saldo. Essa lógica foi para o App.jsx
-
-  // ✅ BUSCAR TIPOS DISPONÍVEIS (Sem mudanças)
   useEffect(() => {
     const fetchTipos = async () => {
       try {
         const response = await api.get('/api/tipos');
-        console.log('📦 Tipos encontrados:', response.data.tipos);
+        console.log(' Tipos encontrados:', response.data.tipos);
         setTiposDisponiveis(response.data.tipos || []);
       } catch (err) {
-        console.error('❌ Erro ao buscar tipos:', err);
+        console.error(' Erro ao buscar tipos:', err);
       }
     };
     fetchTipos();
   }, []);
 
-  // ✅ BUSCAR TODOS OS COSMÉTICOS (Sem mudanças)
   useEffect(() => {
     const fetchShop = async () => {
       setLoading(true);
       try {
-        console.log('🔄 Buscando TODOS os cosméticos...');
+        console.log(' Buscando TODOS os cosméticos...');
         
-        // REMOVER O LIMIT OU COLOCAR UM NÚMERO MUITO ALTO
         const response = await api.get('/api/cosmeticos?limit=50000');
         const cosmeticos = response.data.data;
 
@@ -73,7 +61,7 @@ const Loja = ({ saldo, setSaldo }) => {
         setFilteredItems(cosmeticos);
         setLoading(false);
       } catch (error) {
-        console.error("❌ Erro ao buscar loja:", error);
+        console.error("Erro ao buscar loja:", error);
         setLoading(false);
       }
     };
@@ -81,32 +69,27 @@ const Loja = ({ saldo, setSaldo }) => {
     fetchShop();
   }, []);
 
-  // ✅ APLICAR FILTROS (Sem mudanças)
   useEffect(() => {
     let filtered = [...items];
 
-    // Busca por nome
     if (searchTerm) {
       filtered = filtered.filter(item =>
         item.nome.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Filtro de raridade
     if (selectedRarities.length > 0) {
       filtered = filtered.filter(item =>
         selectedRarities.includes(item.raridade)
       );
     }
 
-    // Filtro de tipo
     if (selectedTypes.length > 0) {
       filtered = filtered.filter(item =>
         selectedTypes.includes(item.tipo)
       );
     }
 
-    // Filtro de data
     if (dataInicio) {
       filtered = filtered.filter(item =>
         new Date(item.addedAt) >= new Date(dataInicio)
@@ -118,7 +101,6 @@ const Loja = ({ saldo, setSaldo }) => {
       );
     }
 
-    // Filtros booleanos
     if (apenasNovos) {
       filtered = filtered.filter(item => item.isNew === true);
     }
@@ -131,10 +113,9 @@ const Loja = ({ saldo, setSaldo }) => {
 
     console.log(`🔍 Filtros aplicados: ${filtered.length} itens encontrados`);
     setFilteredItems(filtered);
-    setCurrentPage(1); // Resetar para página 1 quando filtrar
+    setCurrentPage(1); 
   }, [searchTerm, selectedRarities, selectedTypes, dataInicio, dataFim, apenasNovos, apenasVenda, apenasPromo, items]);
 
-  // ✅ PAGINAÇÃO (Sem mudanças)
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -167,15 +148,14 @@ const Loja = ({ saldo, setSaldo }) => {
     setApenasPromo(false);
   };
 
-  // ✅ LÓGICA DE COMPRA (Usa setSaldo recebido via prop)
   const handleBuy = async (cosmeticoId, preco, nome) => {
     if (!preco || preco === 0) {
-      alert("❌ Este item não possui preço definido!");
+      alert("Este item não possui preço definido!");
       return;
     }
 
     if (preco > saldo) {
-      alert(`❌ Saldo insuficiente!\n\nVocê tem: ${saldo.toLocaleString()} V-Bucks\nPrecisa de: ${preco.toLocaleString()} V-Bucks`);
+      alert(` Saldo insuficiente!\n\nVocê tem: ${saldo.toLocaleString()} V-Bucks\nPrecisa de: ${preco.toLocaleString()} V-Bucks`);
       return;
     }
 
@@ -187,18 +167,16 @@ const Loja = ({ saldo, setSaldo }) => {
       const response = await api.post("/store/comprar", { cosmeticoId });
       alert("✅ " + response.data.mensagem);
       
-      // ATUALIZA O SALDO GLOBALMENTE VIA PROP
       if(setSaldo && response.data.saldoAtual !== undefined) {
         setSaldo(response.data.saldoAtual); 
       } else {
-          // Fallback para re-busca (se o App.jsx não conseguir buscar)
           const userResponse = await api.get('/privado');
           if (userResponse.data) {
              setSaldo(userResponse.data.vbucks);
           }
       }
     } catch (error) {
-      alert("❌ Erro: " + (error.response?.data?.erro || "Erro desconhecido"));
+      alert("Erro: " + (error.response?.data?.erro || "Erro desconhecido"));
     }
   };
 
@@ -210,12 +188,6 @@ const Loja = ({ saldo, setSaldo }) => {
           <h1>LOJA DE ITENS</h1>
           <p>Atualiza diariamente às 21:00</p>
           
-          {/* 3. REMOVIDO: Saldo duplicado na seção azul, agora só aparece na Navbar */}
-          {/* O trecho removido era:
-          <p style={{fontSize: '1.2rem', fontWeight: 'bold', marginTop: '10px'}}>
-            💰 Saldo: {saldo.toLocaleString()} V-Bucks
-          </p>
-          */}
         </div>
 
         <div className="header-actions">
@@ -312,7 +284,7 @@ const Loja = ({ saldo, setSaldo }) => {
                     checked={apenasNovos}
                     onChange={(e) => setApenasNovos(e.target.checked)}
                   />
-                  <span>⭐ Apenas Novos</span>
+                  <span> Apenas Novos</span>
                 </label>
                 <label className="filter-option">
                   <input
@@ -320,7 +292,7 @@ const Loja = ({ saldo, setSaldo }) => {
                     checked={apenasVenda}
                     onChange={(e) => setApenasVenda(e.target.checked)}
                   />
-                  <span>🛒 Apenas à Venda</span>
+                  <span> Apenas à Venda</span>
                 </label>
                 <label className="filter-option">
                   <input
@@ -328,11 +300,11 @@ const Loja = ({ saldo, setSaldo }) => {
                     checked={apenasPromo}
                     onChange={(e) => setApenasPromo(e.target.checked)}
                   />
-                  <span>🔥 Apenas Promoções</span>
+                  <span> Apenas Promoções</span>
                 </label>
 
                 <button className="clear-filter" onClick={limparFiltros}>
-                  🗑️ Limpar Todos os Filtros
+                   Limpar Todos os Filtros
                 </button>
               </div>
             )}
@@ -366,17 +338,17 @@ const Loja = ({ saldo, setSaldo }) => {
                       <div style={{position: 'absolute', top: '10px', right: '10px', display: 'flex', flexDirection: 'column', gap: '5px'}}>
                         {item.isNew && (
                           <span style={{background: '#ffc107', color: '#000', padding: '3px 8px', borderRadius: '5px', fontSize: '0.7rem', fontWeight: 'bold'}}>
-                            ⭐ NOVO
+                             NOVO
                           </span>
                         )}
                         {item.isForSale && (
                           <span style={{background: '#4caf50', color: '#fff', padding: '3px 8px', borderRadius: '5px', fontSize: '0.7rem', fontWeight: 'bold'}}>
-                            🛒 VENDA
+                             VENDA
                           </span>
                         )}
                         {item.isPromo && (
                           <span style={{background: '#ff5722', color: '#fff', padding: '3px 8px', borderRadius: '5px', fontSize: '0.7rem', fontWeight: 'bold'}}>
-                            🔥 PROMO
+                             PROMO
                           </span>
                         )}
                       </div>
@@ -414,7 +386,6 @@ const Loja = ({ saldo, setSaldo }) => {
               )}
             </div>
 
-            {/* PAGINAÇÃO */}
             {totalPages > 1 && (
               <div className="pagination-container">
                 <button 

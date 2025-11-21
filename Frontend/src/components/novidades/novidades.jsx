@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../loja/Loja.css";
+import '../Loja/loja.css'
 import { FaShoppingCart, FaStar } from "react-icons/fa";
 import Vbucks from "../../assets/vbucks.png";
 import api from "../../services/api";
@@ -9,7 +9,6 @@ const Novidades = () => {
   const [loading, setLoading] = useState(true);
   const [saldo, setSaldo] = useState(10000);
 
-  // Buscar saldo
   useEffect(() => {
     const fetchSaldo = async () => {
       try {
@@ -24,15 +23,13 @@ const Novidades = () => {
     fetchSaldo();
   }, []);
 
-  // ✅ Buscar NOVIDADES (isNew = true)
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        // Endpoint correto: /api/cosmeticos/novos
         const response = await api.get("/api/cosmeticos/novos");
         const novos = response.data.data;
 
-        console.log(`✅ ${novos.length} novidades encontradas!`);
+        console.log(`${novos.length} novidades encontradas!`);
         setItems(novos);
         setLoading(false);
       } catch (error) {
@@ -46,12 +43,12 @@ const Novidades = () => {
 
   const handleBuy = async (cosmeticoId, preco, nome) => {
     if (!preco || preco === 0) {
-      alert("❌ Este item não possui preço definido!");
+      alert(" Este item não possui preço definido!");
       return;
     }
 
     if (preco > saldo) {
-      alert(`❌ Saldo insuficiente!\n\nVocê tem: ${saldo.toLocaleString()} V-Bucks\nPrecisa de: ${preco.toLocaleString()} V-Bucks`);
+      alert(` Saldo insuficiente!\n\nVocê tem: ${saldo.toLocaleString()} V-Bucks\nPrecisa de: ${preco.toLocaleString()} V-Bucks`);
       return;
     }
 
@@ -61,14 +58,13 @@ const Novidades = () => {
 
     try {
       const response = await api.post("/store/comprar", { cosmeticoId });
-      alert("✅ " + response.data.mensagem);
+      alert(" " + response.data.mensagem);
       setSaldo(response.data.saldoAtual);
       
-      // Recarregar novidades
       const res = await api.get("/api/cosmeticos/novos");
       setItems(res.data.data);
     } catch (error) {
-      alert("❌ Erro: " + (error.response?.data?.erro || "Erro desconhecido"));
+      alert(" Erro: " + (error.response?.data?.erro || "Erro desconhecido"));
     }
   };
 
@@ -82,7 +78,7 @@ const Novidades = () => {
           </h1>
           <p>Itens adicionados recentemente no Fortnite</p>
           <p style={{fontSize: '1.2rem', fontWeight: 'bold', marginTop: '10px'}}>
-            💰 Saldo: {saldo.toLocaleString()} V-Bucks
+             Saldo: {saldo.toLocaleString()} V-Bucks
           </p>
         </div>
       </header>
@@ -109,7 +105,6 @@ const Novidades = () => {
                     {item.raridade}
                   </span>
 
-                  {/* Badge de NOVO */}
                   <div style={{position: 'absolute', top: '10px', right: '10px'}}>
                     <span style={{background: '#ffc107', color: '#000', padding: '5px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(0,0,0,0.3)'}}>
                       ⭐ NOVO
@@ -151,7 +146,7 @@ const Novidades = () => {
       </div>
 
       <div style={{textAlign: 'center', marginTop: '30px', fontSize: '1.3rem', opacity: 0.9, background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '10px'}}>
-        📊 Total de novidades: <strong>{items.length.toLocaleString()}</strong>
+        Total de novidades: <strong>{items.length.toLocaleString()}</strong>
       </div>
     </div>
   );

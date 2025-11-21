@@ -14,7 +14,6 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* HEADER */
 .comunidade-header {
     display: flex;
     justify-content: space-between;
@@ -32,7 +31,6 @@
     text-shadow: 3px 3px 0px rgba(0,0,0,0.2);
 }
 
-/* GRID DE USUÁRIOS */
 .users-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -62,7 +60,7 @@
     font-size: 5rem;
     margin-bottom: 1rem;
     border-radius: 50%;
-    border: 4px solid white; /* Cor dinâmica via JS */
+    border: 4px solid white;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -94,7 +92,6 @@
     color: black;
 }
 
-/* --- MODAL (Pop-up) --- */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -111,7 +108,7 @@
 }
 
 .modal-content {
-    background-color: #0D1117; /* Fundo escuro para o modal */
+    background-color: #0D1117;
     width: 90%;
     max-width: 600px;
     border-radius: 20px;
@@ -155,7 +152,6 @@
     padding: 2rem;
 }
 
-/* Mini Grid dentro do Modal */
 .mini-skins-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));

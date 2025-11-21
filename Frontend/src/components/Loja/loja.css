@@ -1,21 +1,19 @@
 :root {
-    /* --- PALETA GERAL --- */
-    --bg-main: rgb(18, 118, 233); /* Azul Vibrante */
-    --bg-card: rgba(0, 0, 0, 0.25); /* Vidro Escuro */
+    --bg-main: rgb(18, 118, 233);
+    --bg-card: rgba(0, 0, 0, 0.25); 
     --border-color: rgba(255, 255, 255, 0.2);
-    --accent-yellow: rgb(255, 196, 0); /* Amarelo Botão */
+    --accent-yellow: rgb(255, 196, 0); 
     --text-white: #ffffff;
     
-    /* --- CORES DE RARIDADE FORTNITE --- */
-    --color-legendary: #d37e28; /* Ouro */
-    --color-epic: #8a2be2;      /* Roxo */
-    --color-rare: #00d8ff;      /* Azul Ciano */
-    --color-uncommon: #66cc33;  /* Verde */
-    --color-common: #b0b8c4;    /* Cinza */
-    --color-marvel: #ed1d24;    /* Vermelho */
-    --color-icon: #00cfba;      /* Turquesa */
-    --color-dc: #002e5f;        /* Azul Escuro */
-    --color-series: #ff00ff;    /* Rosa Genérico */
+    --color-legendary: #d37e28; 
+    --color-epic: #8a2be2;      
+    --color-rare: #00d8ff;      
+    --color-uncommon: #66cc33;  
+    --color-common: #b0b8c4;    
+    --color-marvel: #ed1d24;    
+    --color-icon: #00cfba;      
+    --color-dc: #002e5f;        
+    --color-series: #ff00ff;    
 }
 
 .loja-container {
@@ -26,7 +24,6 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* --- HEADER DA LOJA --- */
 .loja-header {
     display: flex;
     justify-content: space-between;
@@ -59,7 +56,6 @@
     align-items: center;
 }
 
-/* --- BARRA DE PESQUISA --- */
 .search-bar {
     position: relative;
     width: 280px;
@@ -94,14 +90,12 @@
     color: rgba(255,255,255,0.7);
 }
 
-/* --- GRID DE ITENS --- */
 .items-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     gap: 1.5rem;
 }
 
-/* --- CARD DO ITEM --- */
 .shop-card {
     background-color: var(--bg-card);
     border: 2px solid var(--border-color);
@@ -118,7 +112,6 @@
     box-shadow: 0 15px 30px rgba(0,0,0,0.3);
 }
 
-/* Bordas inferiores coloridas por Raridade */
 .shop-card.border-legendary { border-bottom: 6px solid var(--color-legendary); }
 .shop-card.border-epic { border-bottom: 6px solid var(--color-epic); }
 .shop-card.border-rare { border-bottom: 6px solid var(--color-rare); }
@@ -128,7 +121,6 @@
 .shop-card[class*="border-icon"] { border-bottom: 6px solid var(--color-icon); }
 .shop-card[class*="border-dc"] { border-bottom: 6px solid var(--color-dc); }
 
-/* Área da Imagem */
 .card-image-box {
     position: relative;
     height: 220px;
@@ -147,7 +139,6 @@
     transform: scale(1.1);
 }
 
-/* Tag de Raridade */
 .rarity-label {
     position: absolute;
     top: 10px;
@@ -161,7 +152,6 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
-/* Cores de fundo para a Tag */
 .bg-legendary { background-color: var(--color-legendary); }
 .bg-epic { background-color: var(--color-epic); }
 .bg-rare { background-color: var(--color-rare); }
@@ -171,7 +161,6 @@
 .bg-dc_series, [class*="bg-dc"] { background-color: var(--color-dc); }
 .bg-common { background-color: var(--color-common); }
 
-/* --- INFORMAÇÕES DO CARD --- */
 .card-info {
     padding: 1.2rem;
     display: flex;
@@ -196,7 +185,6 @@
     font-weight: 600;
 }
 
-/* Preço */
 .price-row {
     display: flex;
     align-items: center;
@@ -212,7 +200,6 @@
     filter: drop-shadow(0 0 5px rgba(255,255,255,0.4));
 }
 
-/* Botão Comprar */
 .buy-btn {
     width: 100%;
     padding: 12px;
@@ -240,7 +227,6 @@
     cursor: not-allowed;
 }
 
-/* --- LOADING SPINNER --- */
 .loading-container {
     display: flex;
     flex-direction: column;
@@ -265,7 +251,6 @@
     100% { transform: rotate(360deg); }
 }
 
-/* --- FILTRO MÚLTIPLO --- */
 .filter-wrapper {
     position: relative;
     width: 200px;
@@ -297,12 +282,11 @@
     transform: rotate(180deg);
 }
 
-/* Menu Dropdown */
 .filter-dropdown {
     position: absolute;
     top: 110%;
     right: 0;
-    width: 280px; /* AUMENTADO PARA CABER MAIS FILTROS */
+    width: 280px; 
     max-height: 500px;
     overflow-y: auto;
     background-color: #0D1117;
@@ -316,7 +300,6 @@
     gap: 10px;
 }
 
-/* Scroll customizado */
 .filter-dropdown::-webkit-scrollbar {
     width: 8px;
 }
@@ -335,7 +318,6 @@
     background: rgba(255,255,255,0.3);
 }
 
-/* Opções do Checkbox */
 .filter-option {
     display: flex;
     align-items: center;
@@ -373,7 +355,6 @@
     border-color: #ff5252;
 }
 
-/* RESPONSIVE */
 @media (max-width: 768px) {
     .loja-header {
         flex-direction: column;
@@ -394,7 +375,6 @@
     }
 }
 
-/* PAGINAÇÃO */
 .pagination-container {
     display: flex;
     justify-content: center;

@@ -15,7 +15,6 @@ export default async function Registrar(req, res) {
       driver: sqlite3.Database
     });
 
-    // Checa duplicado
     const exists = await db.get('SELECT * FROM Usuario WHERE email = ?', [email]);
     if (exists) {
       return res.status(409).json({ erro: 'E-mail já cadastrado.' });
@@ -23,7 +22,6 @@ export default async function Registrar(req, res) {
 
     const senhaHash = await bcrypt.hash(password, 10);
 
-    // Use crypto.randomUUID() para id (Node 14+)
     const id = (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString();
 
     await db.run(

@@ -14,13 +14,13 @@ const Cadastro = () => {
     event.preventDefault();
 
     try {
-      const response = await api.post("/registrar", {
+      await api.post("/register", {
         email,
         senha,
       });
 
       alert("Conta criada com sucesso!");
-      navigate("/");
+      navigate("/login");
     } catch (error) {
       alert("Erro ao criar conta: " + error.response?.data?.erro);
     }
@@ -55,7 +55,7 @@ const Cadastro = () => {
 
         <div className="signup-link">
           <p>
-            Já possuo uma conta <Link to="/">Entrar </Link>
+            Já possuo uma conta <Link to="/login">Login</Link>
           </p>
         </div>
       </form>

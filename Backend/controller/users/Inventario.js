@@ -2,47 +2,64 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export async function listarInventario(req, res) {
-  try {
-    const usuarioId = req.userId;
+  try {
+    const usuarioId = req.userId;
 
-    const itens = await prisma.itemComprado.findMany({
-      where: { usuarioId },
-      include: {
-        cosmetico: {
-          select: { nome: true, imagemUrl: true, raridade: true, tipo: true, preco: true }
-        }
-      },
-      orderBy: { dataCompra: 'desc' }
-    });
+    if (!usuarioId) {
+      return res.status(401).json({ erro: 'Usuário não autenticado.' });
+    }
 
-    res.json({ usuarioId, itens });
-  } catch (error) {
-    console.error('Erro ao buscar inventário:', error);
-    res.status(500).json({ erro: 'Erro ao buscar inventário.' });
-  }
+    const itens = await prisma.itemComprado.findMany({
+      where: { usuarioId },
+      include: {
+        cosmetico: {
+          select: {
+            id: true,
+            nome: true,
+            raridade: true,
+            tipo: true,
+            imagemUrl: true,
+            preco: true,
+          }
+        }
+      },
+      orderBy: { dataCompra: 'desc' }
+    });
+
+    const resultado = itens.map(item => ({
+      id: item.id,      dataCompra: item.dataCompra,
+      cosmetico: item.cosmetico,
+    }));
+
+    res.json(resultado);
+
+  } catch (error) {
+    console.error('Erro ao buscar itens do usuário:', error);
+    res.status(500).json({ erro: 'Erro interno ao buscar itens do usuário.' });
+  }
 }
 
 export async function verInventarioOutroUsuario(req, res) {
-  try {
-    const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-    const usuario = await prisma.usuario.findUnique({
-      where: { id },
-      select: {
-        email: true,
-        itensComprados: {
-          include: { cosmetico: { select: { nome: true, imagemUrl: true, raridade: true } } }
-        }
-      }
-    });
+    const usuario = await prisma.usuario.findUnique({
+      where: { id },
+      select: {
+        email: true,
+        itensComprados: {
+          include: { cosmetico: { select: { nome: true, imagemUrl: true, raridade: true } } }
+        }
+      }
+    });
 
-    if (!usuario) {
-      return res.status(404).json({ erro: 'Usuário não encontrado.' });
-    }
+    if (!usuario) {
+      return res.status(404).json({ erro: 'Usuário não encontrado.' });
+    }
 
-    res.json(usuario);
-  } catch (error) {
-    console.error('Erro ao buscar inventário de outro usuário:', error);
-    res.status(500).json({ erro: 'Erro ao buscar inventário.' });
-  }
+    res.json(usuario);
+  } catch (error) {
+    console.error('Erro ao buscar inventário de outro usuário:', error);
+    res.status(500).json({ erro: 'Erro ao buscar inventário.' });
+  }
 }
